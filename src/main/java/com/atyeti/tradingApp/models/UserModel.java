@@ -18,7 +18,7 @@ public class UserModel {
 		this.email = email;
 		this.password = password;
 		this.phone = phone;
-		this.amount_left = 50000;
+		this.amount_left = 0;
 	}
 
 	@Column(name = "name")

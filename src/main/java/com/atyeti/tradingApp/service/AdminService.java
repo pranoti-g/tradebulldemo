@@ -35,35 +35,60 @@ public class AdminService {
 
     public Map<String, String> pendingWithdrawFund(Map<String, String> userInput) {
 
+        UserModel data1 = userRepository.findByEmail(userInput.get("email"));
         Map<String, String> res = new HashMap<>();
-        AdminModel data = new AdminModel();
-        data.setAmount(Integer.parseInt(userInput.get("amount_left")));
-        data.setUserid(userInput.get("email"));
-        data.setDateTime(myShareService.getDate() + " " + myShareService.getTime());
-        data.setStatus("pending");
-        data.setType("withdrawFund");
-        adminRepository.save(data);
-        res.put("status", "pending");
-        return res;
+        int amt=Integer.parseInt(userInput.get("amount_left"));
 
+        int originalamt=data1.getAmount_left();
 
+        if(amt>originalamt)
+        {
+            res.put("status","invalid");
+            return  res;
+        }
+        else {
+            AdminModel data = new AdminModel();
+            data.setAmount(Integer.parseInt(userInput.get("amount_left")));
+            data.setUserid(userInput.get("email"));
+            data.setDateTime(myShareService.getDate() + " " + myShareService.getTime());
+            data.setStatus("pending");
+            data.setType("withdrawFund");
+            adminRepository.save(data);
+            res.put("status", "pending");
+            return res;
+
+        }
     }
 
     public Map<String, String> approveFund(Integer sno) {
+
         AdminModel data = adminRepository.findById(sno).orElseThrow(()
                 -> new RuntimeException("record not found" + sno));
-        Map<String, String> approve = new HashMap<>();
-        approve.put("email", data.getUserid());
-        approve.put("amount_left", data.getAmount() + "");
-        data.setStatus("approved");
-        if (data.getType().equalsIgnoreCase("withdrawFund")) {
-            adminRepository.save(data);
-            Map<String, String> res = userService.withdraw(approve);
-            return res;
-        } else {
-            adminRepository.save(data);
-            Map<String, String> res = userService.addfund(approve);
-            return res;
+        String email=data.getUserid();
+        UserModel data1 = userRepository.findByEmail(email);
+        Map<String, String> res1 = new HashMap<>();
+        if(data.getAmount()>data1.getAmount_left() && data.getType().equalsIgnoreCase("withdrawFund"))
+
+        {
+            res1.put("status","invalid");
+            return  res1;
+        }
+
+        else
+        {
+            Map<String, String> approve = new HashMap<>();
+            approve.put("email", data.getUserid());
+            approve.put("amount_left", data.getAmount() + "");
+            data.setStatus("approved");
+            if (data.getType().equalsIgnoreCase("withdrawFund")) {
+                adminRepository.save(data);
+                Map<String, String> res = userService.withdraw(approve);
+                return res;
+            } else {
+                adminRepository.save(data);
+                Map<String, String> res = userService.addfund(approve);
+                return res;
+            }
         }
     }
 
