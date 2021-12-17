@@ -64,4 +64,19 @@ public class HistoryService {
         Collections.reverse(myHistoryModel);
         return myHistoryModel;
     }
+    
+    public List<HistoryModel> pendingHistoryUSer(String email) {
+        List<HistoryModel> myHistoryModel = null;
+        try {
+            myHistoryModel = historyRepository.findAll().stream()
+                    .filter(data -> (data.getUser_id().equalsIgnoreCase(email)) &&
+                            (data.getStatus().equalsIgnoreCase("Pending") ))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+
+        Collections.reverse(myHistoryModel);
+        return myHistoryModel;
+    }
 }
