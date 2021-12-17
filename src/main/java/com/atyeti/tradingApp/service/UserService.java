@@ -141,10 +141,22 @@ public class UserService {
         map.put("status", "success");
         return map;
     }
+public List<UserModel> getallclient() {
+    List<UserModel> allOrders = (List<UserModel>) userRepository.findAll();
+    List<UserModel> users = new ArrayList<UserModel>();
+    Iterator<UserModel> item1 = allOrders.iterator();
+    while (item1.hasNext()) {
+        UserModel ms = (UserModel) item1.next();
+        if (!("abc@atyeti.com".equals(ms.getEmail()))) {
 
-    public List<UserModel> getallclient() {
-        return (List<UserModel>) userRepository.findAll();
+            users.add(ms);
+        }
     }
+
+
+    return  users;
+
+}
 
 
 }
