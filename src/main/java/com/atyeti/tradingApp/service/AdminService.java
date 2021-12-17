@@ -143,50 +143,39 @@ public class AdminService {
 
     }
 
-
-    public Map<String, String> pendingBuy(Map<String, String> userInput) {
-        String email = (String) userInput.get("email");
-        int companyId = Integer.parseInt(userInput.get("companyId").toString());
-        int qty = Integer.parseInt(userInput.get("quantity").toString());
-
-        String date = myShareService.getDate();
-        String time = myShareService.getTime();
-
-        HashMap<String, String> map = new HashMap<>();
-
-
-        try {
-            UserModel userModel = userRepository.findByEmail(email);
-            CompanyModel companyModel = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not Found"));
-
-
-            //(int sno, String user_id, int company_id, String company_name, int price, int quantity, String date,
-            //        String time, String type,String status)
-
+public Map<String, String> pendingBuy(Map<String, String> userInput) {
+    String email = (String) userInput.get("email");
+    int companyId = Integer.parseInt(userInput.get("companyId").toString());
+    int qty = Integer.parseInt(userInput.get("quantity").toString());
+    String date = myShareService.getDate();
+    String time = myShareService.getTime();
+    HashMap<String, String> map = new HashMap<>();
+    try {
+        UserModel userModel = userRepository.findByEmail(email);
+        CompanyModel companyModel = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not Found"));
+        //(int sno, String user_id, int company_id, String company_name, int price, int quantity, String date,
+        //        String time, String type,String status)
+        if (companyModel.getVolume() < qty) {
+            map.put("status", "insufficient quantity");
+            return map;
+        }else if (userModel.getAmount_left() <= (qty * companyModel.getCurrent_rate())) {
+            map.put("status", "insufficient balance");
+            return map;
+        }else{
             HistoryModel history = new HistoryModel(1, email, companyId,
                     companyModel.getName(), -companyModel.getCurrent_rate() * qty, qty, date, time, "Buy", "Pending");
-
             historyRepository.save(history);
-
-            if (companyModel.getVolume() < qty) {
-                map.put("status", "insufficient quantity");
-                return map;
-            }
-
-            if (userModel.getAmount_left() <= (qty * companyModel.getCurrent_rate())) {
-                map.put("status", "insufficient balance");
-                return map;
-            }
-
             map.put("status", "Pending");
-            return map;
-        } catch (Exception e) {
-            map.put("status", e.getMessage());
             return map;
         }
 
+
+    } catch (Exception e) {
+        map.put("status", e.getMessage());
+        return map;
     }
 
+}
     public Map<String, String> pendingSell(Map<String, String> userInput) {
         String email = (String) userInput.get("email");
         int companyId = Integer.parseInt(userInput.get("companyId").toString());
