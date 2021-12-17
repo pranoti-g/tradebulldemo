@@ -128,6 +128,11 @@ public class HomeController {
     public List<HistoryModel> pendingHistory(@RequestParam("email") String email) {
         return historyService.pendingHistory(email);
     }
+    
+     @GetMapping("/pendingHistoryUser")
+    public List<HistoryModel> pendingHistoryUser(@RequestParam("email") String email) {
+        return historyService.pendingHistoryUSer(email);
+    }
 
     //Admin pending Order
     @GetMapping("/adminHistory")
