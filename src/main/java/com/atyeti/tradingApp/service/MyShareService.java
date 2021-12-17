@@ -103,7 +103,15 @@ public class MyShareService {
                 //Brokrage added
 
                 List<HistoryModel> item = historyService.admintransactionHistroy();
-                int pendingRequestNO = item.size();
+                List<HistoryModel> request = new ArrayList<HistoryModel>();
+                Iterator<HistoryModel> item1 = item.iterator();
+                while (item1.hasNext()) {
+                    HistoryModel ms = (HistoryModel) item1.next();
+                    if (email.equals(ms.getUser_id())) {
+                            request.add(ms);
+                    }
+                }
+                int pendingRequestNO = request.size();
 
                 if(qty<50 && (pendingRequestNO<10)) {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.02));
@@ -144,6 +152,15 @@ public class MyShareService {
                 int userAmount = userModel.getAmount_left();
                 int price,currentAmount;
                 List<HistoryModel> item = historyService.admintransactionHistroy();
+                List<HistoryModel> request = new ArrayList<HistoryModel>();
+                Iterator<HistoryModel> item1 = item.iterator();
+                while (item1.hasNext()) {
+                    HistoryModel ms = (HistoryModel) item1.next();
+                    if (email.equals(ms.getUser_id())) {
+
+                            request.add(ms);
+                    }
+                }
                 int pendingRequestNO = item.size();
                 if(qty<50 && (pendingRequestNO<10)) {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.02));
@@ -247,6 +264,15 @@ public class MyShareService {
             int price,currentAmount;
             List<UserModel> admin = userService.getOne("abc@atyeti.com");
             List<HistoryModel> item = historyService.admintransactionHistroy();
+            List<HistoryModel> request = new ArrayList<HistoryModel>();
+            Iterator<HistoryModel> item1 = item.iterator();
+            while (item1.hasNext()) {
+                HistoryModel ms = (HistoryModel) item1.next();
+                if (email.equals(ms.getUser_id())) {
+
+                        request.add(ms);
+                }
+            }
             int pendingRequestNO = item.size();
             if(qty<50 && (pendingRequestNO<10)) {
                 price = (int) ((qty * company.get(0).getCurrent_rate()) - ((qty * company.get(0).getCurrent_rate()) * 0.02));
