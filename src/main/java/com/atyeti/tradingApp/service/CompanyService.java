@@ -41,15 +41,17 @@ public class CompanyService {
                 (companyModel.getP_e_ratio() == 0))
         {
             response.put("status", "Failure");
+             return response;
 
         } else {
             companyRepository.save(companyModel);
             response.put("status", "success");
+             return response;
         }
 
 
 
-        return response;
+       
     }
 
     public List<CompanyModel> search() {
