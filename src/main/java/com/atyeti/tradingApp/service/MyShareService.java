@@ -282,7 +282,7 @@ public class MyShareService {
             }else{
                 price = (int) ((qty * company.get(0).getCurrent_rate()) - ((qty * company.get(0).getCurrent_rate()) * 0.03));
                 currentAmount = (int) (userAmount + price);
-                int brokerage = (int )(((qty * company.get(0).getCurrent_rate()) * 0.02)+admin.get(0).getAmount_left());
+                int brokerage = (int )(((qty * company.get(0).getCurrent_rate()) * 0.03)+admin.get(0).getAmount_left());
                 admin.get(0).setAmount_left(brokerage);
             }
             int userQty = myShares.get(0).getQuantity();

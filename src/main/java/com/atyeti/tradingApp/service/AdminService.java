@@ -158,7 +158,7 @@ public Map<String, String> pendingBuy(Map<String, String> userInput) {
         if (companyModel.getVolume() < qty) {
             map.put("status", "insufficient quantity");
             return map;
-        }else if (userModel.getAmount_left() <= (qty * companyModel.getCurrent_rate())) {
+        }else if (userModel.getAmount_left() < (qty * companyModel.getCurrent_rate())) {
             map.put("status", "insufficient balance");
             return map;
         }else{
