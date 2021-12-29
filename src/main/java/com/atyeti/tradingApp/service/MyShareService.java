@@ -1,12 +1,10 @@
 package com.atyeti.tradingApp.service;
 
-import com.atyeti.tradingApp.models.CompanyModel;
-import com.atyeti.tradingApp.models.HistoryModel;
-import com.atyeti.tradingApp.models.MySharesModel;
-import com.atyeti.tradingApp.models.UserModel;
+import com.atyeti.tradingApp.models.*;
 import com.atyeti.tradingApp.repository.*;
 import com.atyeti.tradingApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +22,13 @@ public class MyShareService {
 
     @Autowired
     MySharesRepository mySharesRepository;
+
+    @Autowired
+    private MyShareService myShareService;
+
+    @Autowired
+    private AdminRepository adminRepository;
+
     @Autowired
     UserRepository userRepository;
     @Autowired
@@ -36,7 +41,6 @@ public class MyShareService {
 
     @Autowired
     UserService userService;
-
 
 
     public List<MySharesModel> myShare(String email) {
@@ -93,13 +97,13 @@ public class MyShareService {
                 return map;
             }
 
-            if (userModel.getAmount_left() <= (qty * companyModel.getCurrent_rate())) {
+            if (userModel.getAmount_left() < (qty * companyModel.getCurrent_rate())) {
                 map.put("status", "insufficient balance");
                 return map;
             } else if (!myShares.isEmpty()) {
 
                 int userAmount = userModel.getAmount_left();
-                int price,currentAmount;
+                int price, currentAmount ,brokerage,user_brokerage;
                 //Brokrage added
 
                 List<HistoryModel> item = historyService.admintransactionHistroy();
@@ -113,17 +117,29 @@ public class MyShareService {
                 }
                 int pendingRequestNO = request.size();
 
-                if(qty<50 && (pendingRequestNO<10)) {
+                if (qty < 50 && (pendingRequestNO < 10)) {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.02));
                     currentAmount = (int) (userAmount - price);
-                    int brokerage = (int )((qty * companyModel.getCurrent_rate()) * 0.02)+admin.get(0).getAmount_left();
+                    user_brokerage =  (int) ((qty * companyModel.getCurrent_rate()) * 0.02);
+                    brokerage = (int) ((qty * companyModel.getCurrent_rate()) * 0.02) + admin.get(0).getAmount_left();
                     admin.get(0).setAmount_left(brokerage);
-                }else{
+                } else {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.03));
                     currentAmount = (int) (userAmount - price);
-                    int brokerage = (int )((qty * companyModel.getCurrent_rate()) * 0.03)+admin.get(0).getAmount_left();
+                    user_brokerage =  (int) ((qty * companyModel.getCurrent_rate()) * 0.03);
+                    brokerage = (int) ((qty * companyModel.getCurrent_rate()) * 0.03) + admin.get(0).getAmount_left();
                     admin.get(0).setAmount_left(brokerage);
                 }
+
+                AdminModel data = new AdminModel();
+                data.setAmount(user_brokerage);
+                data.setUserid(email);
+                data.setDateTime(myShareService.getDate() + " " + myShareService.getTime());
+                data.setStatus("Success");
+                data.setType("Brokerage(Buy)");
+                adminRepository.save(data);
+
+
                 int userQty = myShares.get(0).getQuantity();
                 int currentQty = userQty + qty;
 
@@ -150,7 +166,7 @@ public class MyShareService {
                 return map;
             } else {
                 int userAmount = userModel.getAmount_left();
-                int price,currentAmount;
+                int price, currentAmount,brokerage,user_brokerage;
                 List<HistoryModel> item = historyService.admintransactionHistroy();
                 List<HistoryModel> request = new ArrayList<HistoryModel>();
                 Iterator<HistoryModel> item1 = item.iterator();
@@ -161,18 +177,29 @@ public class MyShareService {
                             request.add(ms);
                     }
                 }
-                int pendingRequestNO = item.size();
-                if(qty<50 && (pendingRequestNO<10)) {
+                int pendingRequestNO = request.size();
+                if (qty < 50 && (pendingRequestNO < 10)) {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.02));
                     currentAmount = (int) (userAmount - price);
-                    int brokerage = (int )((qty * companyModel.getCurrent_rate()) * 0.02)+admin.get(0).getAmount_left();
+                    user_brokerage =  (int) ((qty * companyModel.getCurrent_rate()) * 0.02);
+                    brokerage = (int) ((qty * companyModel.getCurrent_rate()) * 0.02) + admin.get(0).getAmount_left();
                     admin.get(0).setAmount_left(brokerage);
-                }else{
+                } else {
                     price = (int) ((qty * companyModel.getCurrent_rate()) + ((qty * companyModel.getCurrent_rate()) * 0.03));
                     currentAmount = (int) (userAmount - price);
-                    int brokerage = (int )((qty * companyModel.getCurrent_rate()) * 0.03)+admin.get(0).getAmount_left();
+                    user_brokerage =  (int) ((qty * companyModel.getCurrent_rate()) * 0.03);
+                    brokerage = (int) ((qty * companyModel.getCurrent_rate()) * 0.03) + admin.get(0).getAmount_left();
                     admin.get(0).setAmount_left(brokerage);
                 }
+
+                AdminModel data = new AdminModel();
+                data.setAmount(user_brokerage);
+                data.setUserid(email);
+                data.setDateTime(myShareService.getDate() + " " + myShareService.getTime());
+                data.setStatus("Success");
+                data.setType("Brokerage(Buy)");
+                adminRepository.save(data);
+
                 int currentVol = companyModel.getVolume() - qty;
                 userModel.setAmount_left(currentAmount);
                 userRepository.save(userModel);
@@ -261,7 +288,7 @@ public class MyShareService {
             }
 
             int userAmount = user.get(0).getAmount_left();
-            int price,currentAmount;
+            int price, currentAmount,brokerage,user_brokerage;
             List<UserModel> admin = userService.getOne("abc@atyeti.com");
             List<HistoryModel> item = historyService.admintransactionHistroy();
             List<HistoryModel> request = new ArrayList<HistoryModel>();
@@ -273,18 +300,29 @@ public class MyShareService {
                         request.add(ms);
                 }
             }
-            int pendingRequestNO = item.size();
-            if(qty<50 && (pendingRequestNO<10)) {
+            int pendingRequestNO = request.size();
+            if (qty < 50 && (pendingRequestNO < 10)) {
                 price = (int) ((qty * company.get(0).getCurrent_rate()) - ((qty * company.get(0).getCurrent_rate()) * 0.02));
                 currentAmount = (int) (userAmount + price);
-                int brokerage = (int )(((qty * company.get(0).getCurrent_rate()) * 0.02)+admin.get(0).getAmount_left());
+                user_brokerage =  (int) ((qty * company.get(0).getCurrent_rate()) * 0.02);
+                brokerage = (int) (((qty * company.get(0).getCurrent_rate()) * 0.02) + admin.get(0).getAmount_left());
                 admin.get(0).setAmount_left(brokerage);
-            }else{
+            } else {
                 price = (int) ((qty * company.get(0).getCurrent_rate()) - ((qty * company.get(0).getCurrent_rate()) * 0.03));
                 currentAmount = (int) (userAmount + price);
-                int brokerage = (int )(((qty * company.get(0).getCurrent_rate()) * 0.03)+admin.get(0).getAmount_left());
+                user_brokerage =  (int) ((qty * company.get(0).getCurrent_rate()) * 0.03);
+                brokerage = (int) (((qty * company.get(0).getCurrent_rate()) * 0.03) + admin.get(0).getAmount_left());
                 admin.get(0).setAmount_left(brokerage);
             }
+
+            AdminModel data = new AdminModel();
+            data.setAmount(user_brokerage);
+            data.setUserid(email);
+            data.setDateTime(myShareService.getDate() + " " + myShareService.getTime());
+            data.setStatus("Success");
+            data.setType("Brokerage(Sell)");
+            adminRepository.save(data);
+
             int userQty = myShares.get(0).getQuantity();
             int currentQty = userQty - qty;
 
@@ -340,21 +378,21 @@ public class MyShareService {
 
         String type = history.getType();
 
-        String email =  history.getUser_id();
-        String companyId =  String.valueOf(history.getCompany_id());
-        String qty =  String.valueOf(history.getQuantity());
-        String idx  =  String.valueOf(index);
-        HashMap<String,String> datamap = new HashMap<>();
-        datamap.put("email",email);
-        datamap.put("companyId",companyId);
-        datamap.put("quantity",qty);
-        datamap.put("index",idx);
+        String email = history.getUser_id();
+        String companyId = String.valueOf(history.getCompany_id());
+        String qty = String.valueOf(history.getQuantity());
+        String idx = String.valueOf(index);
+        HashMap<String, String> datamap = new HashMap<>();
+        datamap.put("email", email);
+        datamap.put("companyId", companyId);
+        datamap.put("quantity", qty);
+        datamap.put("index", idx);
 
-        if(type.equals("Buy")){
+        if (type.equals("Buy")) {
 
             return buy(datamap);
 
-        }else{
+        } else {
             return sell(datamap);
         }
 
