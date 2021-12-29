@@ -109,7 +109,7 @@ public class AdminService {
         List<AdminModel> orders = null;
 
         try {
-            if(!userId.equalsIgnoreCase("abc@atyeti.com")) {
+            if(!(userId.equalsIgnoreCase("abc@atyeti.com"))) {
                 orders = adminRepository.findAll().stream().filter(data -> data.getUserid().equalsIgnoreCase(userId) &&
                         data.getType().equalsIgnoreCase("addFund") || data.getUserid()
                         .equalsIgnoreCase(userId) && data.getType()
