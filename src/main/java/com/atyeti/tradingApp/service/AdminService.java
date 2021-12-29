@@ -37,16 +37,14 @@ public class AdminService {
 
         UserModel data1 = userRepository.findByEmail(userInput.get("email"));
         Map<String, String> res = new HashMap<>();
-        int amt=Integer.parseInt(userInput.get("amount_left"));
+        int amt = Integer.parseInt(userInput.get("amount_left"));
 
-        int originalamt=data1.getAmount_left();
+        int originalamt = data1.getAmount_left();
 
-        if(amt>originalamt)
-        {
-            res.put("status","invalid");
-            return  res;
-        }
-        else {
+        if (amt > originalamt) {
+            res.put("status", "invalid");
+            return res;
+        } else {
             AdminModel data = new AdminModel();
             data.setAmount(Integer.parseInt(userInput.get("amount_left")));
             data.setUserid(userInput.get("email"));
@@ -64,18 +62,14 @@ public class AdminService {
 
         AdminModel data = adminRepository.findById(sno).orElseThrow(()
                 -> new RuntimeException("record not found" + sno));
-        String email=data.getUserid();
+        String email = data.getUserid();
         UserModel data1 = userRepository.findByEmail(email);
         Map<String, String> res1 = new HashMap<>();
-        if(data.getAmount()>data1.getAmount_left() && data.getType().equalsIgnoreCase("withdrawFund"))
-
-        {
-            res1.put("status","invalid");
-            return  res1;
-        }
-
-        else
-        {
+        if (data.getAmount() > data1.getAmount_left() && data.getType()
+                .equalsIgnoreCase("withdrawFund")) {
+            res1.put("status", "invalid");
+            return res1;
+        } else {
             Map<String, String> approve = new HashMap<>();
             approve.put("email", data.getUserid());
             approve.put("amount_left", data.getAmount() + "");
@@ -115,10 +109,21 @@ public class AdminService {
         List<AdminModel> orders = null;
 
         try {
-            orders = adminRepository.findAll().stream().filter(data -> data.getUserid().equalsIgnoreCase(userId) &&
-                    data.getType().equalsIgnoreCase("addFund") || data.getUserid()
-                    .equalsIgnoreCase(userId) && data.getType()
-                    .equalsIgnoreCase("withdrawFund")).collect(Collectors.toList());
+            if(!userId.equalsIgnoreCase("abc@atyeti.com")) {
+                orders = adminRepository.findAll().stream().filter(data -> data.getUserid().equalsIgnoreCase(userId) &&
+                        data.getType().equalsIgnoreCase("addFund") || data.getUserid()
+                        .equalsIgnoreCase(userId) && data.getType()
+                        .equalsIgnoreCase("withdrawFund")).collect(Collectors.toList());
+
+                Collections.reverse(orders);
+            }else{
+                orders = adminRepository.findAll().stream()
+                        .filter(data -> data.getType().equalsIgnoreCase("Brokerage(Buy)") ||
+                                data.getType().equalsIgnoreCase("Brokerage(Sell)"))
+                        .collect(Collectors.toList());
+                Collections.reverse(orders);
+
+            }
 
         } catch (Exception e) {
 
@@ -143,39 +148,48 @@ public class AdminService {
 
     }
 
-public Map<String, String> pendingBuy(Map<String, String> userInput) {
-    String email = (String) userInput.get("email");
-    int companyId = Integer.parseInt(userInput.get("companyId").toString());
-    int qty = Integer.parseInt(userInput.get("quantity").toString());
-    String date = myShareService.getDate();
-    String time = myShareService.getTime();
-    HashMap<String, String> map = new HashMap<>();
-    try {
-        UserModel userModel = userRepository.findByEmail(email);
-        CompanyModel companyModel = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not Found"));
-        //(int sno, String user_id, int company_id, String company_name, int price, int quantity, String date,
-        //        String time, String type,String status)
-        if (companyModel.getVolume() < qty) {
-            map.put("status", "insufficient quantity");
-            return map;
-        }else if (userModel.getAmount_left() < (qty * companyModel.getCurrent_rate())) {
-            map.put("status", "insufficient balance");
-            return map;
-        }else{
-            HistoryModel history = new HistoryModel(1, email, companyId,
-                    companyModel.getName(), -companyModel.getCurrent_rate() * qty, qty, date, time, "Buy", "Pending");
-            historyRepository.save(history);
-            map.put("status", "Pending");
+
+    public Map<String, String> pendingBuy(Map<String, String> userInput) {
+        String email = (String) userInput.get("email");
+        int companyId = Integer.parseInt(userInput.get("companyId").toString());
+        int qty = Integer.parseInt(userInput.get("quantity").toString());
+
+        String date = myShareService.getDate();
+        String time = myShareService.getTime();
+
+        HashMap<String, String> map = new HashMap<>();
+
+
+        try {
+            UserModel userModel = userRepository.findByEmail(email);
+            CompanyModel companyModel = companyRepository.findById(companyId).orElseThrow(() -> new RuntimeException("Company not Found"));
+
+
+
+
+            if (companyModel.getVolume() < qty) {
+                map.put("status", "insufficient quantity");
+                return map;
+            }else if (userModel.getAmount_left() <= (qty * companyModel.getCurrent_rate())) {
+                map.put("status", "insufficient balance");
+                return map;
+            }else{
+                HistoryModel history = new HistoryModel(1, email, companyId,
+                        companyModel.getName(), -companyModel.getCurrent_rate() * qty, qty, date, time, "Buy", "Pending");
+
+                historyRepository.save(history);
+                map.put("status", "Pending");
+                return map;
+            }
+
+
+        } catch (Exception e) {
+            map.put("status", e.getMessage());
             return map;
         }
 
-
-    } catch (Exception e) {
-        map.put("status", e.getMessage());
-        return map;
     }
 
-}
     public Map<String, String> pendingSell(Map<String, String> userInput) {
         String email = (String) userInput.get("email");
         int companyId = Integer.parseInt(userInput.get("companyId").toString());
